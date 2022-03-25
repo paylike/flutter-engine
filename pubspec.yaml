@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  paylike_dart_client: ^1.0.5
+  paylike_money: ^1.0.0
 
 dev_dependencies:
   flutter_test:
