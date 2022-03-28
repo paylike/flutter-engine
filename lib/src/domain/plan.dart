@@ -1,4 +1,7 @@
+import 'package:paylike_flutter_engine/src/domain/payment.dart';
 import 'package:paylike_money/paylike_money.dart';
+
+import '../validation/can_be_validated.dart';
 
 /// Available options for a plan interval
 enum PlanIntervalOptions {
@@ -16,7 +19,7 @@ enum PlanIntervalOptions {
 }
 
 /// Describes an interval for a plan
-class PlanInterval {
+class PlanInterval implements JSONSerializable {
   /// Defines the frequency, see [PlanIntervalOptions] for more information
   final PlanIntervalOptions unit;
 
@@ -24,10 +27,21 @@ class PlanInterval {
   /// this given plan
   int? value;
   PlanInterval({required this.unit, this.value});
+
+  @override
+  Map<String, dynamic> toJSON() {
+    Map<String, dynamic> json = {
+      'unit': unit.name,
+    };
+    if (value != null) {
+      json = {...json, 'value': value};
+    }
+    return json;
+  }
 }
 
 /// Describes a repeat pattern in a payment plan
-class PaymentPlanRepeat {
+class PaymentPlanRepeat implements JSONSerializable {
   /// Optional and used to define the time of the first execution.
   DateTime? first;
 
@@ -35,6 +49,15 @@ class PaymentPlanRepeat {
   PlanInterval interval;
 
   PaymentPlanRepeat({required this.interval, this.first});
+
+  @override
+  Map<String, dynamic> toJSON() {
+    Map<String, dynamic> json = {'interval': interval.toJSON()};
+    if (first != null) {
+      json = {...json, 'first': first?.toUtc().toIso8601String()};
+    }
+    return json;
+  }
 }
 
 /// Defines a payment plan
@@ -42,7 +65,7 @@ class PaymentPlanRepeat {
 /// Note that you are required to define at least one repeat or scheduled element
 ///
 /// [More information on how plans work](https://github.com/paylike/api-reference/blob/main/payments/index.md#payment-plans)
-class PaymentPlan {
+class PaymentPlan implements CanBeValidated, JSONSerializable {
   /// Amount used for the payment plan
   final PaymentAmount amount;
 
@@ -59,17 +82,56 @@ class PaymentPlan {
     this.repeat,
     this.scheduled,
   });
+
+  @override
+  void validate() {
+    if (scheduled == null && repeat == null) {
+      throw InvalidPaymentBodyException(
+          'Plan needs either repeat or scheduled');
+    }
+  }
+
+  @override
+  Map<String, dynamic> toJSON() {
+    Map<String, dynamic> json = {'amount': amount.toJSONBody()};
+    if (repeat != null) {
+      json['repeat'] = repeat?.toJSON();
+    }
+    if (scheduled != null) {
+      json['scheduled'] = scheduled?.toUtc().toIso8601String();
+    }
+    return json;
+  }
 }
 
 /// Describes unplanned payment creations
 ///
 /// [More info](https://github.com/paylike/api-reference/blob/main/payments/index.md#unplanned)
 /// about how unplanned payments work
-class UnplannedPayment {
+class UnplannedPayment implements CanBeValidated, JSONSerializable {
   /// Initiated by the customer (from your application)
   bool? merchant;
 
   /// Initiated by the merchant (or off-site customer)
   bool? customer;
   UnplannedPayment({this.merchant, this.customer});
+
+  @override
+  void validate() {
+    if (merchant == null && customer == null) {
+      throw InvalidPaymentBodyException('Unplan field is invalid');
+    }
+  }
+
+  @override
+  Map<String, dynamic> toJSON() {
+    Map<String, dynamic> json = {};
+    if (merchant != null) {
+      json['merchant'] = merchant;
+    }
+    if (customer != null) {
+      json['customer'] = customer;
+    }
+    return json;
+  }
 }

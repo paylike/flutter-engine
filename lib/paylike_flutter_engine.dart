@@ -3,7 +3,7 @@ library paylike_flutter_engine;
 import 'package:paylike_flutter_engine/src/config/api.dart';
 import 'package:paylike_flutter_engine/src/service/api.dart';
 
-import 'src/domain/card_tokenized.dart';
+import 'src/domain/card.dart';
 
 /// Executes payment flow
 class PaylikeEngine {
@@ -12,7 +12,8 @@ class PaylikeEngine {
   /// https://app.paylike.io/#/
   final String clientId;
 
-  /// Indicates the API mode
+  /// Indicates the API mode [API_MODE.test] by default which is the
+  /// sandbox API
   ///
   /// More information at [API_MODE]
   final API_MODE mode;
@@ -21,12 +22,10 @@ class PaylikeEngine {
   final PaylikeAPIService _service;
   PaylikeEngine({
     required this.clientId,
-    required this.mode,
+    this.mode = API_MODE.test,
   }) : _service = PaylikeAPIService(clientId: clientId, mode: mode);
 
   Future<CardTokenized> tokenize(String number, String cvc) {
     return _service.tokenizeCard(number, cvc);
   }
-
-  constructPayment() {}
 }

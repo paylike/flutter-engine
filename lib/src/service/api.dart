@@ -1,10 +1,9 @@
 import 'package:paylike_dart_client/paylike_dart_client.dart';
-import 'package:paylike_flutter_engine/src/dto/card.dart';
 import 'package:paylike_flutter_engine/src/dto/payment.dart';
 import 'package:paylike_money/paylike_money.dart';
 
 import '../config/api.dart';
-import '../domain/card_tokenized.dart';
+import '../domain/card.dart';
 
 /// Handles API communication towards Paylike servers
 class PaylikeAPIService {
@@ -51,7 +50,7 @@ class PaylikeAPIService {
 
   Future<PaymentResponseDTO> capture({
     required String number,
-    required CardExpiryDTO expiry,
+    required Expiry expiry,
     required String cvc,
     PaymentAmount? amount,
     required Map<String, dynamic> custom,
