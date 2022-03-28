@@ -60,3 +60,16 @@ class PaymentPlan {
     this.scheduled,
   });
 }
+
+/// Describes unplanned payment creations
+///
+/// [More info](https://github.com/paylike/api-reference/blob/main/payments/index.md#unplanned)
+/// about how unplanned payments work
+class UnplannedPayment {
+  /// Initiated by the customer (from your application)
+  bool? merchant;
+
+  /// Initiated by the merchant (or off-site customer)
+  bool? customer;
+  UnplannedPayment({this.merchant, this.customer});
+}
