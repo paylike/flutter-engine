@@ -25,9 +25,18 @@ class PaylikeAPIService {
   /// You can find examples on how to create an instance of
   /// an API client in the example application.
   final PaylikeClient client;
-  PaylikeAPIService({required this.clientId, required this.mode})
-      : client = PaylikeClient();
 
+  /// Logger function
+  void Function(dynamic)? log;
+
+  PaylikeAPIService({required this.clientId, required this.mode, this.log})
+      : client = PaylikeClient().setLog((d) {}) {
+    if (log != null) {
+      client.setLog(log as void Function(dynamic));
+    }
+  }
+
+  /// Used for card tokenization
   Future<CardTokenized> tokenizeCard(String number, String cvc) async {
     String cardNumberTokenized = "";
     String cardCvcTokenized = "";
@@ -48,6 +57,7 @@ class PaylikeAPIService {
     return CardTokenized(number: cardNumberTokenized, cvc: cardCvcTokenized);
   }
 
+  /// Used for payment creation
   Future<PaymentResponseDTO> capture({
     required String number,
     required Expiry expiry,

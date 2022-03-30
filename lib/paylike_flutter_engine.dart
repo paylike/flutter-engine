@@ -20,10 +20,14 @@ class PaylikeEngine {
 
   /// Service to execute api requests
   final PaylikeAPIService _service;
+
+  /// Logger function
+  void Function(dynamic)? log;
   PaylikeEngine({
     required this.clientId,
     this.mode = API_MODE.test,
-  }) : _service = PaylikeAPIService(clientId: clientId, mode: mode);
+    this.log,
+  }) : _service = PaylikeAPIService(clientId: clientId, mode: mode, log: log);
 
   Future<CardTokenized> tokenize(String number, String cvc) {
     return _service.tokenizeCard(number, cvc);
