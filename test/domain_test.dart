@@ -96,4 +96,44 @@ void main() {
     '''));
     expect(jsonEncode(cardPayment.toJSON()), expected);
   });
+
+  test("Card payment should be validated correctly", () {
+    var cardPayment = CardPayment(card: testCard);
+    expect(() => cardPayment.validate(),
+        throwsA(isA<InvalidPaymentBodyException>()));
+
+    cardPayment = CardPayment(
+        card: testCard, plans: [PaymentPlan(scheduled: DateTime.now())]);
+    expect(() => cardPayment.validate(),
+        throwsA(isA<InvalidPaymentBodyException>()));
+
+    cardPayment = CardPayment(card: testCard, plans: [
+      PaymentPlan(scheduled: DateTime.now()),
+      PaymentPlan(amount: testAmount, scheduled: DateTime.now())
+    ]);
+    expect(() => cardPayment.validate(),
+        throwsA(isA<InvalidPaymentBodyException>()));
+
+    cardPayment = CardPayment(card: testCard, amount: testAmount);
+    cardPayment.validate();
+
+    cardPayment = CardPayment(card: testCard, amount: testAmount, plans: [
+      PaymentPlan(scheduled: DateTime.now()),
+    ]);
+    cardPayment.validate();
+
+    cardPayment = CardPayment(card: testCard, plans: [
+      PaymentPlan(scheduled: DateTime.now(), amount: testAmount),
+    ]);
+    cardPayment.validate();
+
+    cardPayment = CardPayment(card: testCard, plans: [
+      PaymentPlan(scheduled: DateTime.now(), amount: testAmount),
+      PaymentPlan(
+          repeat: PaymentPlanRepeat(
+              interval: PlanInterval(unit: PlanIntervalOptions.week)),
+          amount: testAmount),
+    ]);
+    cardPayment.validate();
+  });
 }

@@ -41,6 +41,10 @@ class _BasePayment implements PaylikePaymentBody {
     }
     for (var plan in plans) {
       plan.validate();
+      if (amount == null && plan.amount == null) {
+        throw InvalidPaymentBodyException(
+            'If no overall amount is provided every plan needs an amount');
+      }
     }
     unplanned?.validate();
   }

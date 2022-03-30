@@ -67,7 +67,7 @@ class PaymentPlanRepeat implements JSONSerializable {
 /// [More information on how plans work](https://github.com/paylike/api-reference/blob/main/payments/index.md#payment-plans)
 class PaymentPlan implements CanBeValidated, JSONSerializable {
   /// Amount used for the payment plan
-  final PaymentAmount amount;
+  PaymentAmount? amount;
 
   /// Defines the repeat interval for the plan
   ///
@@ -78,7 +78,7 @@ class PaymentPlan implements CanBeValidated, JSONSerializable {
   /// Defines a scheduled payment at a given date
   DateTime? scheduled;
   PaymentPlan({
-    required this.amount,
+    this.amount,
     this.repeat,
     this.scheduled,
   });
@@ -93,7 +93,10 @@ class PaymentPlan implements CanBeValidated, JSONSerializable {
 
   @override
   Map<String, dynamic> toJSON() {
-    Map<String, dynamic> json = {'amount': amount.toJSONBody()};
+    Map<String, dynamic> json = {};
+    if (amount != null) {
+      json['amount'] = amount?.toJSONBody();
+    }
     if (repeat != null) {
       json['repeat'] = repeat?.toJSON();
     }
