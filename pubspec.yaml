@@ -1,7 +1,7 @@
 name: paylike_flutter_engine
 description: A new Flutter package project.
 version: 0.0.1
-homepage:
+homepage: https://paylike.io
 
 environment:
   sdk: ">=2.16.1 <3.0.0"
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  paylike_dart_client: ^1.0.5
+  paylike_dart_client: ^1.0.7
   paylike_money: ^1.0.0
 
 dev_dependencies:

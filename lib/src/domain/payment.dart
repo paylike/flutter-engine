@@ -85,7 +85,8 @@ class CardPayment extends _BasePayment {
     List<PaymentPlan> plans = const [],
     UnplannedPayment? unplanned,
     Map<String, dynamic> custom = const {},
-  }) : super(
+  })  : assert(amount != null || plans.isNotEmpty),
+        super(
             amount: amount, plans: plans, unplanned: unplanned, custom: custom);
 
   @override

@@ -98,11 +98,8 @@ void main() {
   });
 
   test("Card payment should be validated correctly", () {
-    var cardPayment = CardPayment(card: testCard);
-    expect(() => cardPayment.validate(),
-        throwsA(isA<InvalidPaymentBodyException>()));
-
-    cardPayment = CardPayment(
+    expect(() => CardPayment(card: testCard), throwsAssertionError);
+    var cardPayment = CardPayment(
         card: testCard, plans: [PaymentPlan(scheduled: DateTime.now())]);
     expect(() => cardPayment.validate(),
         throwsA(isA<InvalidPaymentBodyException>()));
