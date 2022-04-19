@@ -1,13 +1,13 @@
 import 'package:paylike_dart_client/paylike_dart_client.dart';
 import 'package:paylike_flutter_engine/src/domain/payment.dart';
 import 'package:paylike_flutter_engine/src/dto/payment.dart';
-import 'package:paylike_money/paylike_money.dart';
+import 'package:paylike_flutter_engine/src/repository/hints.dart';
 
 import '../config/api.dart';
 import '../domain/card.dart';
 
 /// Handles API communication towards Paylike servers
-class PaylikeAPIService {
+class APIService {
   /// Your client id
   ///
   /// You can find your own client id [here](https:///app.paylike.io/)
@@ -30,7 +30,10 @@ class PaylikeAPIService {
   /// Logger function
   void Function(dynamic)? log;
 
-  PaylikeAPIService({required this.clientId, required this.mode, this.log})
+  /// Stores hints
+  final HintsRepository _hintsRepository = HintsRepository();
+
+  APIService({required this.clientId, required this.mode, this.log})
       : client = PaylikeClient().setLog((d) {}) {
     if (log != null) {
       client.setLog(log as void Function(dynamic));

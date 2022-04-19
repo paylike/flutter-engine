@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   paylike_dart_client: ^1.0.7
   paylike_money: ^1.0.0
+  webview_flutter: ^3.0.2
 
 dev_dependencies:
   flutter_test:
