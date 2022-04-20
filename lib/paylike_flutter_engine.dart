@@ -12,6 +12,12 @@ import 'package:paylike_flutter_engine/src/service/api.dart';
 import 'src/domain/card.dart';
 import 'src/domain/payment.dart';
 
+export 'src/domain/card.dart';
+export 'src/domain/payment.dart';
+export 'src/domain/plan.dart';
+export 'package:paylike_currencies/paylike_currencies.dart';
+export 'package:paylike_money/paylike_money.dart';
+
 /// Describes the different states of the engine that can occour during
 /// usage
 enum EngineState {
@@ -22,7 +28,11 @@ enum EngineState {
   /// the TDS flow
   webviewChallengeRequired,
 
-  /// Indicated that a webview challenge is at the second part
+  /// Indicates that the first step of the TDS flow is done now challenge
+  /// needs interraction from the end user
+  webviewChallengeStarted,
+
+  /// Indicated that a webview challenge is at the third part
   /// of the authentication flow
   webviewChallengeFinish,
 
@@ -78,7 +88,7 @@ class PaylikeEngine extends ChangeNotifier {
   final HintsRepository _hintsRepository;
 
   /// Repository to store card for ongoing transaction
-  final SingleRepository<Card> _cardRepository;
+  final SingleRepository<PaylikeCard> _cardRepository;
 
   /// Repository to store TDS HTML Body
   final SingleRepository<String> _htmlRepository;
@@ -120,13 +130,17 @@ class PaylikeEngine extends ChangeNotifier {
       } else {
         _current = EngineState.done;
       }
-      notifyListeners();
     } on PaylikeException catch (e) {
       // TODO: Here we could do additional error handling
+      _current = EngineState.errorHappened;
       print(e.cause);
       print(e.code);
       print(e.statusCode);
+    } catch (e) {
+      print(e);
+      _current = EngineState.errorHappened;
     }
+    notifyListeners();
   }
 
   /// Restarts the flow
@@ -138,20 +152,23 @@ class PaylikeEngine extends ChangeNotifier {
     _current = EngineState.waitingForInput;
   }
 
-  /// Used when the second step of the webview challenge is done
+  /// Used when the first step of the webview challenge is done
+  /// esentially used when the [_current] is [EngineState.webviewChallengeStarted]
   void continuePayment() async {
     try {
       var paymentExecution = await _apiService
           .cardPayment(_paymentRepository.item, hints: _hintsRepository.hints);
+      _hintsRepository.addHints(paymentExecution.resp.hints);
       if (paymentExecution.resp.isHTML) {
-        _current = EngineState.errorHappened;
-        throw Exception("Should not be HTML");
+        _htmlRepository.set(paymentExecution.resp.getHTMLBody());
+        if (_current == EngineState.webviewChallengeRequired) {
+          _current = EngineState.webviewChallengeStarted;
+        } else {
+          throw Exception("Engine state invalid $_current");
+        }
       } else {
-        var transaction =
-            (paymentExecution.resp.paymentResponse as PaymentResponse)
-                .transaction;
-        _transactionId = transaction.id;
-        _current = EngineState.done;
+        print("Payment challenge did not arrive");
+        _current = EngineState.errorHappened;
       }
       notifyListeners();
     } on PaylikeException catch (e) {
@@ -162,12 +179,24 @@ class PaylikeEngine extends ChangeNotifier {
     }
   }
 
-  /// Used when the acquired hints in the first step are
-  /// validated by the paylike backend and service is ready to show
-  /// the last validation page for the user
-  /// TODO: Probably this needs more information
-  void finishWebviewChallenge() {
-    _current = EngineState.webviewChallengeFinish;
+  void finishPayment() async {
+    try {
+      var paymentExecution = await _apiService
+          .cardPayment(_paymentRepository.item, hints: _hintsRepository.hints);
+      if (paymentExecution.resp.isHTML) {
+        throw Exception("Should not be HTML anymore");
+      } else {
+        var transaction =
+            (paymentExecution.resp.paymentResponse as PaymentResponse)
+                .transaction;
+        _transactionId = transaction.id;
+        _current = EngineState.done;
+      }
+    } catch (e) {
+      // TODO: Here we could do additional error handling
+      print(e);
+      _current = EngineState.errorHappened;
+    }
     notifyListeners();
   }
 

@@ -8,10 +8,10 @@ class CardTokenized {
 }
 
 /// Describes a card that already has a tokenized number and CVC
-class Card implements JSONSerializable {
+class PaylikeCard implements JSONSerializable {
   final CardTokenized details;
   final Expiry expiry;
-  Card({required this.details, required this.expiry});
+  PaylikeCard({required this.details, required this.expiry});
 
   @override
   Map<String, dynamic> toJSON() {

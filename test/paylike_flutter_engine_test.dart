@@ -21,7 +21,7 @@ void main() {
   test('Should be able to create payments', () async {
     var tokenized = await engine.tokenize('4100000000000000', '111');
     var cardPayment = CardPayment(
-        card: Card(
+        card: PaylikeCard(
             details: tokenized, expiry: const Expiry(month: 12, year: 2025)),
         amount:
             Money.fromDouble(PaylikeCurrencies().byCode(CurrencyCode.EUR), 25));

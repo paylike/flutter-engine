@@ -78,7 +78,7 @@ class _BasePayment implements PaylikePaymentBody {
 /// Describes a payment with debit / credit cards
 class CardPayment extends _BasePayment {
   /// Tokenized card to use in the payment
-  final Card card;
+  final PaylikeCard card;
   CardPayment({
     required this.card,
     PaymentAmount? amount,

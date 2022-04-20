@@ -10,7 +10,8 @@ class HintsRepository {
 
   /// Adds new hints to a transactionID
   void addHints(List<String> hints) {
-    _hints = [..._hints, ...hints];
+    var newList = [..._hints, ...hints];
+    _hints = newList.toSet().toList();
   }
 
   /// Resets the list

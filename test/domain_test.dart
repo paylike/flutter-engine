@@ -11,7 +11,7 @@ void main() {
   var testAmount =
       Money.fromDouble(PaylikeCurrencies().byCode(CurrencyCode.EUR), 30.0);
 
-  var testCard = Card(
+  var testCard = PaylikeCard(
       details: const CardTokenized(number: 'foo', cvc: 'bar'),
       expiry: const Expiry(month: 12, year: 25));
   test('Serialization should work as expected', () {

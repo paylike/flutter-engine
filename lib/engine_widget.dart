@@ -44,10 +44,7 @@ class PaylikeEngineWidget extends StatefulWidget {
 class _EngineWidgetState extends State<PaylikeEngineWidget> {
   final Completer<WebViewController> _webviewCtrl = Completer();
 
-  void _loadLastStep() {
-    if (widget.engine.current != EngineState.webviewChallengeFinish) {
-      return;
-    }
+  void _loadEngineHTML() {
     _webviewCtrl.future.then((ctrl) => ctrl
             .loadHtmlString(
                 HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
@@ -57,16 +54,26 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
         }));
   }
 
+  void _reactForEvents() {
+    debugPrint("State changed to ${widget.engine.current}");
+    if (widget.engine.current == EngineState.webviewChallengeStarted ||
+        widget.engine.current == EngineState.webviewChallengeFinish) {
+      _loadEngineHTML();
+    } else {
+      setState(() {});
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    widget.engine.addListener(_loadLastStep);
+    widget.engine.addListener(_reactForEvents);
   }
 
   @override
   void dispose() {
     super.dispose();
-    widget.engine.removeListener(_loadLastStep);
+    widget.engine.removeListener(_reactForEvents);
   }
 
   Widget _textOrEmptyState(String text) {
@@ -84,11 +91,14 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
     if (widget.engine.current == EngineState.errorHappened) {
       return _textOrEmptyState("Something went wrong during payment");
     }
+    if (widget.engine.current == EngineState.done) {
+      return _textOrEmptyState(
+          "Transaction done, id: ${widget.engine.transactionId}");
+    }
     return Expanded(
         child: WebView(
       debuggingEnabled: true,
       navigationDelegate: (request) async {
-        debugPrint('Navigating to ${request.url}');
         return NavigationDecision.navigate;
       },
       javascriptMode: JavascriptMode.unrestricted,
@@ -101,14 +111,13 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
               if (htmlParsedResponse.hints.isEmpty) {
                 throw Exception('Hints cannot be empty after webview auth');
               }
-              debugPrint('parsed $s');
+              widget.engine.addHints(htmlParsedResponse.hints);
               if (widget.engine.current ==
                   EngineState.webviewChallengeRequired) {
-                widget.engine.addHints(htmlParsedResponse.hints);
-                widget.engine.finishWebviewChallenge();
-              } else {
-                widget.engine.addHints(htmlParsedResponse.hints);
                 widget.engine.continuePayment();
+              } else if (widget.engine.current ==
+                  EngineState.webviewChallengeStarted) {
+                widget.engine.finishPayment();
               }
             })
       },
