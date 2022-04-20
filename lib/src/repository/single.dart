@@ -14,7 +14,12 @@ class SingleRepository<T> {
   bool get isAvailable => _single != null;
 
   /// Sets the single
-  set(T single) {
+  void set(T single) {
     _single = single;
+  }
+
+  /// Resets the current state
+  void reset() {
+    _single = null;
   }
 }

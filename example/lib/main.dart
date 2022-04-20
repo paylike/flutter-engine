@@ -51,6 +51,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  final PaylikeEngine _engine =
+      PaylikeEngine(clientId: 'e393f9ec-b2f7-4f81-b455-ce45b02d355d');
 
   void _incrementCounter() {
     setState(() {
@@ -104,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
-            PaylikeEngineWidget(engine: PaylikeEngine(clientId: "fos")),
+            PaylikeEngineWidget(engine: _engine),
           ],
         ),
       ),

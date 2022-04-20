@@ -32,38 +32,57 @@ $body
 
 class PaylikeEngineWidget extends StatefulWidget {
   final PaylikeEngine engine;
-  const PaylikeEngineWidget({Key? key, required this.engine}) : super(key: key);
+  final bool showEmptyState;
+  const PaylikeEngineWidget(
+      {Key? key, required this.engine, this.showEmptyState = false})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _EngineWidgetState();
 }
 
 class _EngineWidgetState extends State<PaylikeEngineWidget> {
-  _EngineWidgetState() {
-    widget.engine.addListener(() {
-      if (widget.engine.current == EngineState.webviewChallengeFinish) {
-        _webviewCtrl.future.then((ctrl) => ctrl
-                .loadHtmlString(
-                    HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
-                    baseUrl: 'https:///b.paylike.io')
-                .catchError((e) {
-              debugPrint('Webview error $e');
-            }));
-      }
-    });
-  }
   final Completer<WebViewController> _webviewCtrl = Completer();
+
+  void _loadLastStep() {
+    if (widget.engine.current != EngineState.webviewChallengeFinish) {
+      return;
+    }
+    _webviewCtrl.future.then((ctrl) => ctrl
+            .loadHtmlString(
+                HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
+                baseUrl: 'https:///b.paylike.io')
+            .catchError((e) {
+          debugPrint('Webview error $e');
+        }));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.engine.addListener(_loadLastStep);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    widget.engine.removeListener(_loadLastStep);
+  }
+
+  Widget _textOrEmptyState(String text) {
+    if (widget.showEmptyState) {
+      return const SizedBox.shrink();
+    }
+    return Expanded(child: Row(children: [Text(text)]));
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.engine.current == EngineState.waitingForInput) {
-      return Expanded(
-          child: Row(
-              children: const [Text("Paylike engine is waiting for input")]));
+      return _textOrEmptyState("Paylike engine is waiting for input");
     }
     if (widget.engine.current == EngineState.errorHappened) {
-      return Expanded(
-          child: Row(
-              children: const [Text("Something went wrong during payment")]));
+      return _textOrEmptyState("Something went wrong during payment");
     }
     return Expanded(
         child: WebView(

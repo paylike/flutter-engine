@@ -129,6 +129,15 @@ class PaylikeEngine extends ChangeNotifier {
     }
   }
 
+  /// Restarts the flow
+  void restart() {
+    _hintsRepository.reset();
+    _cardRepository.reset();
+    _htmlRepository.reset();
+    _paymentRepository.reset();
+    _current = EngineState.waitingForInput;
+  }
+
   /// Used when the second step of the webview challenge is done
   void continuePayment() async {
     try {
