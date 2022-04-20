@@ -25,16 +25,12 @@ enum EngineState {
   waitingForInput,
 
   /// Indicates that a webview challenge is required to complete
-  /// the TDS flow
+  /// the TDS flow, this is the first state when the webview has to be rendered
   webviewChallengeRequired,
 
-  /// Indicates that the first step of the TDS flow is done now challenge
-  /// needs interraction from the end user
+  /// Indicates that the first step of the TDS flow is done and the challenge
+  /// needs interraction from the end user to resolve
   webviewChallengeStarted,
-
-  /// Indicated that a webview challenge is at the third part
-  /// of the authentication flow
-  webviewChallengeFinish,
 
   /// Indicates that all challenges are done
   /// NOTE: It does not mean that the challenge was successful
@@ -48,6 +44,21 @@ enum EngineState {
 enum PaymentState {
   /// State when engine is initialized
   initial,
+}
+
+/// Describes an error state of the engine
+class PaylikeEngineError {
+  /// Intended message for developers
+  final String message;
+
+  /// Present if the exception happened during an API request
+  /// For more information see [PaylikeException]
+  PaylikeException? apiException;
+
+  /// Present if the exception happened internally in the engine
+  Exception? internalException;
+  PaylikeEngineError(
+      {required this.message, this.apiException, this.internalException});
 }
 
 /// Executes payment flow
@@ -69,6 +80,10 @@ class PaylikeEngine extends ChangeNotifier {
     }
     return _transactionId as String;
   }
+
+  /// When the [_current] state is [EngineState.errorHappened]
+  /// this is where you can access what happened
+  PaylikeEngineError? error;
 
   /// Your client ID which can be found on our platform
   ///
@@ -131,14 +146,16 @@ class PaylikeEngine extends ChangeNotifier {
         _current = EngineState.done;
       }
     } on PaylikeException catch (e) {
-      // TODO: Here we could do additional error handling
+      var message = 'An API Exception happened: ${e.code} ${e.cause}';
+      log!(message);
       _current = EngineState.errorHappened;
-      print(e.cause);
-      print(e.code);
-      print(e.statusCode);
+      error = PaylikeEngineError(message: message, apiException: e);
     } catch (e) {
-      print(e);
+      var message = 'An internal exception happened: $e';
+      log!(message);
       _current = EngineState.errorHappened;
+      error = PaylikeEngineError(
+          message: message, internalException: e as Exception);
     }
     notifyListeners();
   }
@@ -167,18 +184,38 @@ class PaylikeEngine extends ChangeNotifier {
           throw Exception("Engine state invalid $_current");
         }
       } else {
-        print("Payment challenge did not arrive");
-        _current = EngineState.errorHappened;
+        throw Exception("Payment challenge should provide HTML at this point");
       }
-      notifyListeners();
     } on PaylikeException catch (e) {
-      // TODO: Here we could do additional error handling
-      print(e.cause);
-      print(e.code);
-      print(e.statusCode);
+      var message = 'An API Exception happened: ${e.code} ${e.cause}';
+      log!(message);
+      _current = EngineState.errorHappened;
+      error = PaylikeEngineError(message: message, apiException: e);
+    } catch (e) {
+      var message = 'An internal exception happened: $e';
+      log!(message);
+      _current = EngineState.errorHappened;
+      error = PaylikeEngineError(
+          message: message, internalException: e as Exception);
     }
+    notifyListeners();
   }
 
+  /// Used when the webview widget encounters an issue with the webview itself.
+  /// In those scenarios we need a way to indicate to the engine that the flow
+  /// ran into an error
+  void setErrorState(Exception e) {
+    _current = EngineState.errorHappened;
+    error = PaylikeEngineError(
+        message:
+            "An error happened outside of the engine that stops the flow from continuing.",
+        internalException: e);
+    notifyListeners();
+  }
+
+  /// Used when the state is [EngineState.webviewChallengeStarted]
+  /// This is naturally the last step of the webview challenge
+  /// And gets called when the end user finsihed the challenge resolution
   void finishPayment() async {
     try {
       var paymentExecution = await _apiService
@@ -192,10 +229,17 @@ class PaylikeEngine extends ChangeNotifier {
         _transactionId = transaction.id;
         _current = EngineState.done;
       }
-    } catch (e) {
-      // TODO: Here we could do additional error handling
-      print(e);
+    } on PaylikeException catch (e) {
+      var message = 'An API Exception happened: ${e.code} ${e.cause}';
+      log!(message);
       _current = EngineState.errorHappened;
+      error = PaylikeEngineError(message: message, apiException: e);
+    } catch (e) {
+      var message = 'An internal exception happened: $e';
+      log!(message);
+      _current = EngineState.errorHappened;
+      error = PaylikeEngineError(
+          message: message, internalException: e as Exception);
     }
     notifyListeners();
   }

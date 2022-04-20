@@ -1,7 +1,6 @@
 import 'package:paylike_dart_client/paylike_dart_client.dart';
 import 'package:paylike_flutter_engine/src/domain/payment.dart';
 import 'package:paylike_flutter_engine/src/dto/payment.dart';
-import 'package:paylike_flutter_engine/src/repository/hints.dart';
 
 import '../config/api.dart';
 import '../domain/card.dart';
@@ -29,9 +28,6 @@ class APIService {
 
   /// Logger function
   void Function(dynamic)? log;
-
-  /// Stores hints
-  final HintsRepository _hintsRepository = HintsRepository();
 
   APIService({required this.clientId, required this.mode, this.log})
       : client = PaylikeClient().setLog((d) {}) {

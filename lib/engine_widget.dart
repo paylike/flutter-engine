@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -56,8 +55,7 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
 
   void _reactForEvents() {
     debugPrint("State changed to ${widget.engine.current}");
-    if (widget.engine.current == EngineState.webviewChallengeStarted ||
-        widget.engine.current == EngineState.webviewChallengeFinish) {
+    if (widget.engine.current == EngineState.webviewChallengeStarted) {
       _loadEngineHTML();
     } else {
       setState(() {});
@@ -109,7 +107,9 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
               var htmlParsedResponse =
                   HTMLHints.fromJSON(jsonDecode(s.message));
               if (htmlParsedResponse.hints.isEmpty) {
-                throw Exception('Hints cannot be empty after webview auth');
+                widget.engine.setErrorState(
+                    Exception('Hints cannot be empty after webview auth'));
+                return;
               }
               widget.engine.addHints(htmlParsedResponse.hints);
               if (widget.engine.current ==
@@ -134,21 +134,17 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
                         ''');
         }()
             .catchError((e) {
-          if (e is PlatformException) {
-            debugPrint(e.message);
-            debugPrint(e.stacktrace);
-          }
+          widget.engine.setErrorState(e as Exception);
         });
       },
       onWebViewCreated: (controller) {
-        debugPrint('Controller created');
         _webviewCtrl.complete(controller);
         controller
             .loadHtmlString(
                 HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
                 baseUrl: 'https:///b.paylike.io')
             .catchError((e) {
-          debugPrint('Webview error $e');
+          widget.engine.setErrorState(e as Exception);
         });
       },
     ));
