@@ -81,6 +81,12 @@ class PaylikeEngine extends ChangeNotifier {
     return _transactionId as String;
   }
 
+  /// Present if testConfig is provided at [createPayment]
+  ///
+  /// We need to store this because it potentially has to be provided
+  /// multiple times during TDS
+  Map<String, dynamic>? _testConfig;
+
   /// When the [_current] state is [EngineState.errorHappened]
   /// this is where you can access what happened
   PaylikeEngineError? error;
@@ -133,9 +139,14 @@ class PaylikeEngine extends ChangeNotifier {
   }
 
   /// Used for payment creation
-  Future<void> createPayment(CardPayment payment) async {
+  ///
+  /// For more information on [testConfig] please check [here](https://github.com/paylike/api-reference/blob/main/payments/index.md#test)
+  Future<void> createPayment(CardPayment payment,
+      {Map<String, dynamic>? testConfig}) async {
     try {
-      var paymentExecution = await _apiService.cardPayment(payment);
+      var paymentExecution =
+          await _apiService.cardPayment(payment, testConfig: testConfig);
+      _testConfig = testConfig;
       _paymentRepository.set(payment);
       _cardRepository.set(payment.card);
       _hintsRepository.addHints(paymentExecution.resp.hints);
@@ -147,12 +158,12 @@ class PaylikeEngine extends ChangeNotifier {
       }
     } on PaylikeException catch (e) {
       var message = 'An API Exception happened: ${e.code} ${e.cause}';
-      log!(message);
+      log?.call(message);
       _current = EngineState.errorHappened;
       error = PaylikeEngineError(message: message, apiException: e);
     } catch (e) {
       var message = 'An internal exception happened: $e';
-      log!(message);
+      log?.call(message);
       _current = EngineState.errorHappened;
       error = PaylikeEngineError(
           message: message, internalException: e as Exception);
@@ -162,6 +173,7 @@ class PaylikeEngine extends ChangeNotifier {
 
   /// Restarts the flow
   void restart() {
+    _testConfig = null;
     _hintsRepository.reset();
     _cardRepository.reset();
     _htmlRepository.reset();
@@ -173,8 +185,10 @@ class PaylikeEngine extends ChangeNotifier {
   /// esentially used when the [_current] is [EngineState.webviewChallengeStarted]
   void continuePayment() async {
     try {
-      var paymentExecution = await _apiService
-          .cardPayment(_paymentRepository.item, hints: _hintsRepository.hints);
+      var paymentExecution = await _apiService.cardPayment(
+          _paymentRepository.item,
+          hints: _hintsRepository.hints,
+          testConfig: _testConfig);
       _hintsRepository.addHints(paymentExecution.resp.hints);
       if (paymentExecution.resp.isHTML) {
         _htmlRepository.set(paymentExecution.resp.getHTMLBody());
@@ -188,12 +202,12 @@ class PaylikeEngine extends ChangeNotifier {
       }
     } on PaylikeException catch (e) {
       var message = 'An API Exception happened: ${e.code} ${e.cause}';
-      log!(message);
+      log?.call(message);
       _current = EngineState.errorHappened;
       error = PaylikeEngineError(message: message, apiException: e);
     } catch (e) {
       var message = 'An internal exception happened: $e';
-      log!(message);
+      log?.call(message);
       _current = EngineState.errorHappened;
       error = PaylikeEngineError(
           message: message, internalException: e as Exception);
@@ -218,8 +232,10 @@ class PaylikeEngine extends ChangeNotifier {
   /// And gets called when the end user finsihed the challenge resolution
   void finishPayment() async {
     try {
-      var paymentExecution = await _apiService
-          .cardPayment(_paymentRepository.item, hints: _hintsRepository.hints);
+      var paymentExecution = await _apiService.cardPayment(
+          _paymentRepository.item,
+          hints: _hintsRepository.hints,
+          testConfig: _testConfig);
       if (paymentExecution.resp.isHTML) {
         throw Exception("Should not be HTML anymore");
       } else {
@@ -231,12 +247,12 @@ class PaylikeEngine extends ChangeNotifier {
       }
     } on PaylikeException catch (e) {
       var message = 'An API Exception happened: ${e.code} ${e.cause}';
-      log!(message);
+      log?.call(message);
       _current = EngineState.errorHappened;
       error = PaylikeEngineError(message: message, apiException: e);
     } catch (e) {
       var message = 'An internal exception happened: $e';
-      log!(message);
+      log?.call(message);
       _current = EngineState.errorHappened;
       error = PaylikeEngineError(
           message: message, internalException: e as Exception);

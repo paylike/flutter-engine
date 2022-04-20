@@ -6,6 +6,8 @@ void main() {
   runApp(const MyApp());
 }
 
+const clientID = 'e393f9ec-b2f7-4f81-b455-ce45b02d355d';
+
 /// This is the same example application you would get with
 /// flutter create -t app .
 class MyApp extends StatelessWidget {
@@ -13,11 +15,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Paylike Engine Usage Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Paylike Engine Demo Home Page'),
     );
   }
 }
@@ -31,15 +33,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String transactionId = "";
-  final PaylikeEngine _engine =
-      PaylikeEngine(clientId: 'e393f9ec-b2f7-4f81-b455-ce45b02d355d');
+  String error = "";
+  final PaylikeEngine _engine = PaylikeEngine(clientId: clientID);
 
   /// Used for listening to engine events
   void _engineListener() {
-    if (_engine.current == EngineState.done) {
-      setState(() {
-        transactionId = _engine.transactionId;
-      });
+    switch (_engine.current) {
+      case EngineState.errorHappened:
+        setState(() {
+          error = _engine.error!.message;
+        });
+        break;
+      case EngineState.done:
+        setState(() {
+          transactionId = _engine.transactionId;
+        });
+        break;
+      default:
+        break;
     }
   }
 
@@ -81,16 +92,18 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'Welcome to our example application',
+              'Press button to start payment flow',
             ),
             Text(
-              'Press button to start payment flow',
-              style: Theme.of(context).textTheme.headline4,
+              'TransactionID: $transactionId',
+            ),
+            Text(
+              'Error: $error',
             ),
 
             /// Notice that the widget is always rendered, but only visible
             /// when the webview flow is being done
-            PaylikeEngineWidget(engine: _engine, showEmptyState: false),
+            PaylikeEngineWidget(engine: _engine, showEmptyState: true),
           ],
         ),
       ),
