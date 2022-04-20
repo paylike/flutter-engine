@@ -29,8 +29,16 @@ $body
   }
 }
 
+/// Used for webview rendering during the TDS challenge flow
 class PaylikeEngineWidget extends StatefulWidget {
+  /// PaylikeEngine instance to use
   final PaylikeEngine engine;
+
+  /// If the [PaylikeEngine] instance is in a state
+  /// in which it makes no sense to render any webviews ([EngineState.errorHappened] or [EngineState.waitingForInput])
+  /// then the widget should show nothing or a text
+  ///
+  /// NOTE: Use [true] for production and [false] for development
   final bool showEmptyState;
   const PaylikeEngineWidget(
       {Key? key, required this.engine, this.showEmptyState = false})
@@ -43,6 +51,7 @@ class PaylikeEngineWidget extends StatefulWidget {
 class _EngineWidgetState extends State<PaylikeEngineWidget> {
   final Completer<WebViewController> _webviewCtrl = Completer();
 
+  /// Loads the HTML from the Engine
   void _loadEngineHTML() {
     _webviewCtrl.future.then((ctrl) => ctrl
             .loadHtmlString(
@@ -53,6 +62,7 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
         }));
   }
 
+  /// Event listener for engine state changes
   void _reactForEvents() {
     debugPrint("State changed to ${widget.engine.current}");
     if (widget.engine.current == EngineState.webviewChallengeStarted) {
@@ -74,6 +84,8 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
     widget.engine.removeListener(_reactForEvents);
   }
 
+  /// Either renders [SizedBox.shrink] or an [Expanded] element
+  /// to show a given text
   Widget _textOrEmptyState(String text) {
     if (widget.showEmptyState) {
       return const SizedBox.shrink();
