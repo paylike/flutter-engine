@@ -5,19 +5,22 @@ import 'package:flutter/cupertino.dart';
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-/// @nodoc
-/// TODO: Not sure if this should be public
+/// Describes hints received via webview
 class HTMLHints {
+  /// Hints received during the webview TDS flow
   List<String> hints;
   HTMLHints.fromJSON(Map<String, dynamic> json)
       : hints = (json['hints'] as List<dynamic>).cast();
 }
 
-/// @nodoc
-/// TODO: Not sure if this should be public
+/// Utility class to help the generation of a standard
+/// html structure that can be loaded to the webview
 class HTMLSupporter {
+  /// <body></body> part of the HTML
   final String body;
   HTMLSupporter(this.body);
+
+  /// Generates the correct body of the HTML
   String generateHTML() {
     return '''
 <!DOCTYPE html><html>
