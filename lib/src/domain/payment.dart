@@ -15,8 +15,8 @@ class InvalidPaymentBodyException implements Exception {
   InvalidPaymentBodyException(this.reason) : super();
 }
 
-/// Base class for payments
-class _BasePayment implements PaylikePaymentBody {
+/// Base class that describes options for card and apple pay payments
+class BasePayment implements PaylikePaymentBody {
   /// Defines the amount of the payment
   PaymentAmount? amount;
 
@@ -28,11 +28,12 @@ class _BasePayment implements PaylikePaymentBody {
 
   /// Custom fields to apply
   Map<String, dynamic> custom;
-  _BasePayment(
-      {required this.amount,
+  BasePayment(
+      {this.amount,
       this.plans = const [],
       this.custom = const {},
-      this.unplanned});
+      this.unplanned})
+      : assert(amount != null || plans.isNotEmpty);
 
   @override
   void validate() {
@@ -76,7 +77,7 @@ class _BasePayment implements PaylikePaymentBody {
 }
 
 /// Describes a payment with debit / credit cards
-class CardPayment extends _BasePayment {
+class CardPayment extends BasePayment {
   /// Tokenized card to use in the payment
   final PaylikeCard card;
   CardPayment({
@@ -89,6 +90,14 @@ class CardPayment extends _BasePayment {
         super(
             amount: amount, plans: plans, unplanned: unplanned, custom: custom);
 
+  /// Used for creating a card payment from an already defined [BasePayment]
+  CardPayment.fromBasePayment(this.card, BasePayment options)
+      : super(
+            amount: options.amount,
+            plans: options.plans,
+            unplanned: options.unplanned,
+            custom: options.custom);
+
   @override
   Map<String, dynamic> toJSON() {
     return {
@@ -99,9 +108,24 @@ class CardPayment extends _BasePayment {
 }
 
 /// Describes a payment with Apple Pay
-class ApplePayPayment extends _BasePayment {
+class ApplePayPayment extends BasePayment {
   /// Apple token to use in the payment
   final String token;
-  ApplePayPayment({required this.token, required PaymentAmount amount})
-      : super(amount: amount);
+  ApplePayPayment({
+    required this.token,
+    PaymentAmount? amount,
+    List<PaymentPlan> plans = const [],
+    UnplannedPayment? unplanned,
+    Map<String, dynamic> custom = const {},
+  })  : assert(amount != null || plans.isNotEmpty),
+        super(
+            amount: amount, plans: plans, unplanned: unplanned, custom: custom);
+
+  /// Used for creating an apple pay payment from an already defined [BasePayment]
+  ApplePayPayment.fromBasePayment(this.token, BasePayment options)
+      : super(
+            amount: options.amount,
+            plans: options.plans,
+            unplanned: options.unplanned,
+            custom: options.custom);
 }

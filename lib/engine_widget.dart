@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
@@ -108,38 +109,38 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
       return _textOrEmptyState(
           "Transaction done, id: ${widget.engine.transactionId}");
     }
-    return Expanded(
-        child: WebView(
-      debuggingEnabled: true,
-      navigationDelegate: (request) async {
-        return NavigationDecision.navigate;
-      },
-      javascriptMode: JavascriptMode.unrestricted,
-      javascriptChannels: <JavascriptChannel>{
-        JavascriptChannel(
-            name: 'MessageInvoker',
-            onMessageReceived: (s) {
-              var htmlParsedResponse =
-                  HTMLHints.fromJSON(jsonDecode(s.message));
-              if (htmlParsedResponse.hints.isEmpty) {
-                widget.engine.setErrorState(
-                    Exception('Hints cannot be empty after webview auth'));
-                return;
-              }
-              widget.engine.addHints(htmlParsedResponse.hints);
-              if (widget.engine.current ==
-                  EngineState.webviewChallengeRequired) {
-                widget.engine.continuePayment();
-              } else if (widget.engine.current ==
-                  EngineState.webviewChallengeStarted) {
-                widget.engine.finishPayment();
-              }
-            })
-      },
-      onProgress: (progress) {
-        () async {
-          var controller = await _webviewCtrl.future;
-          await controller.runJavascript('''
+    return LayoutBuilder(builder: (context, constraints) {
+      var webviewContent = WebView(
+        debuggingEnabled: true,
+        navigationDelegate: (request) async {
+          return NavigationDecision.navigate;
+        },
+        javascriptMode: JavascriptMode.unrestricted,
+        javascriptChannels: <JavascriptChannel>{
+          JavascriptChannel(
+              name: 'MessageInvoker',
+              onMessageReceived: (s) {
+                var htmlParsedResponse =
+                    HTMLHints.fromJSON(jsonDecode(s.message));
+                if (htmlParsedResponse.hints.isEmpty) {
+                  widget.engine.setErrorState(
+                      Exception('Hints cannot be empty after webview auth'));
+                  return;
+                }
+                widget.engine.addHints(htmlParsedResponse.hints);
+                if (widget.engine.current ==
+                    EngineState.webviewChallengeRequired) {
+                  widget.engine.continuePayment();
+                } else if (widget.engine.current ==
+                    EngineState.webviewChallengeStarted) {
+                  widget.engine.finishPayment();
+                }
+              })
+        },
+        onProgress: (progress) {
+          () async {
+            var controller = await _webviewCtrl.future;
+            await controller.runJavascript('''
                           if (!window.paylike_listener) {
                             window.paylike_listener = (e) => {
                               MessageInvoker.postMessage(JSON.stringify(e.data)).then(() => console.log('posted')).catch((e) => console.log(e));
@@ -147,21 +148,31 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
                             window.addEventListener("message", window.paylike_listener);
                           }
                         ''');
-        }()
-            .catchError((e) {
-          widget.engine.setErrorState(e as Exception);
-        });
-      },
-      onWebViewCreated: (controller) {
-        _webviewCtrl.complete(controller);
-        controller
-            .loadHtmlString(
-                HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
-                baseUrl: 'https:///b.paylike.io')
-            .catchError((e) {
-          widget.engine.setErrorState(e as Exception);
-        });
-      },
-    ));
+          }()
+              .catchError((e) {
+            widget.engine.setErrorState(e as Exception);
+          });
+        },
+        onWebViewCreated: (controller) {
+          _webviewCtrl.complete(controller);
+          controller
+              .loadHtmlString(
+                  HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
+                  baseUrl: 'https:///b.paylike.io')
+              .catchError((e) {
+            widget.engine.setErrorState(e as Exception);
+          });
+        },
+      );
+      if (constraints.maxHeight == double.infinity &&
+          constraints.maxWidth == double.infinity) {
+        return Center(
+            child: SizedBox(
+                child: webviewContent,
+                height: max(MediaQuery.of(context).size.width, 600),
+                width: MediaQuery.of(context).size.width - 100));
+      }
+      return webviewContent;
+    });
   }
 }

@@ -17,6 +17,8 @@ export 'src/domain/payment.dart';
 export 'src/domain/plan.dart';
 export 'package:paylike_currencies/paylike_currencies.dart';
 export 'package:paylike_money/paylike_money.dart';
+export 'package:pay/pay.dart';
+export 'package:paylike_dart_client/paylike_dart_client.dart';
 
 /// Describes the different states of the engine that can occour during
 /// usage
@@ -69,6 +71,12 @@ class PaylikeEngine extends ChangeNotifier {
   /// Getter for the current engine state. See more at [EngineState]
   EngineState get current => _current;
 
+  /// Returns if the webview should be active at the moment for the challenge or not
+  bool get isWebviewActive =>
+      _current != EngineState.waitingForInput &&
+      _current != EngineState.done &&
+      _current != EngineState.errorHappened;
+
   /// After a payment flow is completely done transaction id is stored here
   String? _transactionId;
 
@@ -114,8 +122,11 @@ class PaylikeEngine extends ChangeNotifier {
   /// Repository to store TDS HTML Body
   final SingleRepository<String> _htmlRepository;
 
-  /// Repository to store ongoing payment
-  final SingleRepository<CardPayment> _paymentRepository;
+  /// Repository to store ongoing card payment
+  final SingleRepository<CardPayment> _cardPaymentRepository;
+
+  /// Repository to store ongoing apple payment
+  final SingleRepository<ApplePayPayment> _applePaymentRepository;
 
   /// Logger function
   void Function(dynamic)? log;
@@ -127,7 +138,8 @@ class PaylikeEngine extends ChangeNotifier {
         _hintsRepository = HintsRepository(),
         _cardRepository = SingleRepository(),
         _htmlRepository = SingleRepository(),
-        _paymentRepository = SingleRepository(),
+        _cardPaymentRepository = SingleRepository(),
+        _applePaymentRepository = SingleRepository(),
         _current = EngineState.waitingForInput;
 
   /// Used for card tokenization
@@ -136,6 +148,43 @@ class PaylikeEngine extends ChangeNotifier {
   /// you can create a payment
   Future<CardTokenized> tokenize(String number, String cvc) {
     return _apiService.tokenizeCard(number, cvc);
+  }
+
+  /// Used for apple pay tokenization
+  ///
+  /// You need to tokenize your apple token before a payment can be started
+  Future<String> tokenizeAppleToken(String token) {
+    return _apiService.tokenizeAppleToken(token);
+  }
+
+  /// Used for creating a payment with an already tokenized apple pay token
+  Future<void> createPaymentWithApple(ApplePayPayment payment,
+      {Map<String, dynamic>? testConfig}) async {
+    try {
+      var paymentExecution =
+          await _apiService.applePayPayment(payment, testConfig: testConfig);
+      _testConfig = testConfig;
+      _applePaymentRepository.set(payment);
+      _hintsRepository.addHints(paymentExecution.resp.hints);
+      if (paymentExecution.resp.isHTML) {
+        _current = EngineState.webviewChallengeRequired;
+        _htmlRepository.set(paymentExecution.resp.getHTMLBody());
+      } else {
+        _current = EngineState.done;
+      }
+    } on PaylikeException catch (e) {
+      var message = 'An API Exception happened: ${e.code} ${e.cause}';
+      log?.call(message);
+      _current = EngineState.errorHappened;
+      error = PaylikeEngineError(message: message, apiException: e);
+    } catch (e) {
+      var message = 'An internal exception happened: $e';
+      log?.call(message);
+      _current = EngineState.errorHappened;
+      error = PaylikeEngineError(
+          message: message, internalException: e as Exception);
+    }
+    notifyListeners();
   }
 
   /// Used for payment creation
@@ -147,7 +196,7 @@ class PaylikeEngine extends ChangeNotifier {
       var paymentExecution =
           await _apiService.cardPayment(payment, testConfig: testConfig);
       _testConfig = testConfig;
-      _paymentRepository.set(payment);
+      _cardPaymentRepository.set(payment);
       _cardRepository.set(payment.card);
       _hintsRepository.addHints(paymentExecution.resp.hints);
       if (paymentExecution.resp.isHTML) {
@@ -177,7 +226,8 @@ class PaylikeEngine extends ChangeNotifier {
     _hintsRepository.reset();
     _cardRepository.reset();
     _htmlRepository.reset();
-    _paymentRepository.reset();
+    _cardPaymentRepository.reset();
+    _applePaymentRepository.reset();
     _current = EngineState.waitingForInput;
   }
 
@@ -185,13 +235,27 @@ class PaylikeEngine extends ChangeNotifier {
   /// esentially used when the [_current] is [EngineState.webviewChallengeStarted]
   void continuePayment() async {
     try {
-      var paymentExecution = await _apiService.cardPayment(
-          _paymentRepository.item,
-          hints: _hintsRepository.hints,
-          testConfig: _testConfig);
-      _hintsRepository.addHints(paymentExecution.resp.hints);
-      if (paymentExecution.resp.isHTML) {
-        _htmlRepository.set(paymentExecution.resp.getHTMLBody());
+      PaylikeClientResponse resp;
+      if (_cardPaymentRepository.isAvailable) {
+        var paymentExecution = await _apiService.cardPayment(
+            _cardPaymentRepository.item,
+            hints: _hintsRepository.hints,
+            testConfig: _testConfig);
+        _hintsRepository.addHints(paymentExecution.resp.hints);
+        resp = paymentExecution.resp;
+      } else if (_applePaymentRepository.isAvailable) {
+        var paymentExecution = await _apiService.applePayPayment(
+            _applePaymentRepository.item,
+            hints: _hintsRepository.hints,
+            testConfig: _testConfig);
+        _hintsRepository.addHints(paymentExecution.resp.hints);
+        resp = paymentExecution.resp;
+      } else {
+        throw Exception(
+            "Engine does not have required information to continue payment");
+      }
+      if (resp.isHTML) {
+        _htmlRepository.set(resp.getHTMLBody());
         if (_current == EngineState.webviewChallengeRequired) {
           _current = EngineState.webviewChallengeStarted;
         } else {
@@ -232,16 +296,27 @@ class PaylikeEngine extends ChangeNotifier {
   /// And gets called when the end user finsihed the challenge resolution
   void finishPayment() async {
     try {
-      var paymentExecution = await _apiService.cardPayment(
-          _paymentRepository.item,
-          hints: _hintsRepository.hints,
-          testConfig: _testConfig);
-      if (paymentExecution.resp.isHTML) {
+      PaylikeClientResponse resp;
+      if (_cardPaymentRepository.isAvailable) {
+        var paymentExecution = await _apiService.cardPayment(
+            _cardPaymentRepository.item,
+            hints: _hintsRepository.hints,
+            testConfig: _testConfig);
+        resp = paymentExecution.resp;
+      } else if (_applePaymentRepository.isAvailable) {
+        var paymentExecution = await _apiService.applePayPayment(
+            _applePaymentRepository.item,
+            hints: _hintsRepository.hints,
+            testConfig: _testConfig);
+        resp = paymentExecution.resp;
+      } else {
+        throw Exception(
+            "Engine does not have required information to continue payment");
+      }
+      if (resp.isHTML) {
         throw Exception("Should not be HTML anymore");
       } else {
-        var transaction =
-            (paymentExecution.resp.paymentResponse as PaymentResponse)
-                .transaction;
+        var transaction = (resp.paymentResponse as PaymentResponse).transaction;
         _transactionId = transaction.id;
         _current = EngineState.done;
       }

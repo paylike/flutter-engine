@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:paylike_flutter_engine/engine_widget.dart';
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
@@ -7,6 +9,13 @@ void main() {
 }
 
 const clientID = 'e393f9ec-b2f7-4f81-b455-ce45b02d355d';
+const _paymentItems = [
+  PaymentItem(
+    label: 'Total',
+    amount: '150',
+    status: PaymentItemStatus.final_price,
+  )
+];
 
 /// This is the same example application you would get with
 /// flutter create -t app .
@@ -72,6 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// This is the function important for the Engine usage example
   void _doPaymentFlow() async {
+    _engine.restart();
     var card = await _engine.tokenize("410000000000000", "123");
     await _engine.createPayment(CardPayment(
       card: PaylikeCard(
@@ -79,6 +89,23 @@ class _MyHomePageState extends State<MyHomePage> {
       amount:
           Money.fromDouble(PaylikeCurrencies().byCode(CurrencyCode.EUR), 20.5),
     ));
+  }
+
+  void onApplePayResult(Map<String, dynamic> paymentResult) async {
+    _engine.restart();
+    try {
+      var token = paymentResult['token'];
+      var tokenized = await _engine.tokenizeAppleToken(token);
+      await _engine.createPaymentWithApple(ApplePayPayment(
+          token: tokenized,
+          amount: Money.fromDouble(
+              PaylikeCurrencies().byCode(CurrencyCode.HUF), 150.0)));
+    } on PaylikeException catch (e) {
+      print(jsonEncode(paymentResult));
+      print(e.cause);
+      print(e.code);
+      print(e.statusCode);
+    }
   }
 
   @override
@@ -104,6 +131,17 @@ class _MyHomePageState extends State<MyHomePage> {
             /// Notice that the widget is always rendered, but only visible
             /// when the webview flow is being done
             PaylikeEngineWidget(engine: _engine, showEmptyState: true),
+            ApplePayButton(
+              paymentConfigurationAsset: 'payment_config.json',
+              paymentItems: _paymentItems,
+              style: ApplePayButtonStyle.black,
+              type: ApplePayButtonType.buy,
+              margin: const EdgeInsets.only(top: 15.0),
+              onPaymentResult: onApplePayResult,
+              loadingIndicator: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
           ],
         ),
       ),

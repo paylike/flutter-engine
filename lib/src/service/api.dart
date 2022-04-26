@@ -57,8 +57,60 @@ class APIService {
     return CardTokenized(number: cardNumberTokenized, cvc: cardCvcTokenized);
   }
 
+  /// Tokenizes the received apple pay token so it can be used
+  /// throughut the payment process
+  Future<String> tokenizeAppleToken(String token) async {
+    var request = client.tokenizeApple(token).withDefaultRetry();
+    var response = await request.execute();
+    return response.token;
+  }
+
+  /// Used for apple pay payment creation
+  Future<ApplePayPaymentResponseDTO> applePayPayment(
+      ApplePayPayment applePayPayment,
+      {List<String> hints = const [],
+      Map<String, dynamic>? testConfig}) async {
+    Map<String, dynamic> payment = {
+      'integration': {
+        'key': clientId,
+      },
+      'applepay': applePayPayment.token,
+      'custom': applePayPayment.custom,
+    };
+    var resp = await _payment(payment, hints: hints, testConfig: testConfig);
+    return ApplePayPaymentResponseDTO(resp, applePayPayment.token);
+  }
+
+  /// Responsible for executing a given payment
+  Future<PaylikeClientResponse> _payment(Map<String, dynamic> payload,
+      {List<String> hints = const [], Map<String, dynamic>? testConfig}) async {
+    switch (mode) {
+      case API_MODE.local:
+        await Future.delayed(const Duration(seconds: 2));
+        return PaylikeClientResponse(isHTML: false);
+
+      case API_MODE.test:
+        payload['test'] = {};
+        if (testConfig != null) {
+          payload['test'] = {...testConfig};
+        }
+        var resp = await client
+            .paymentCreate(payment: payload, hints: hints)
+            .withDefaultRetry()
+            .execute();
+        return resp;
+
+      case API_MODE.live:
+        var resp = await client
+            .paymentCreate(payment: payload, hints: hints)
+            .withDefaultRetry()
+            .execute();
+        return resp;
+    }
+  }
+
   /// Used for card payment creation
-  Future<PaymentResponseDTO> cardPayment(CardPayment cardPayment,
+  Future<CardPaymentResponseDTO> cardPayment(CardPayment cardPayment,
       {List<String> hints = const [], Map<String, dynamic>? testConfig}) async {
     Map<String, dynamic> payment = {
       'integration': {
@@ -80,29 +132,7 @@ class APIService {
       },
       'custom': cardPayment.custom,
     };
-
-    switch (mode) {
-      case API_MODE.local:
-        await Future.delayed(const Duration(seconds: 2));
-        return PaymentResponseDTO.empty();
-
-      case API_MODE.test:
-        payment['test'] = {};
-        if (testConfig != null) {
-          payment['test'] = {...testConfig};
-        }
-        var resp = await client
-            .paymentCreate(payment: payment, hints: hints)
-            .withDefaultRetry()
-            .execute();
-        return PaymentResponseDTO(resp, cardPayment.card.details);
-
-      case API_MODE.live:
-        var resp = await client
-            .paymentCreate(payment: payment, hints: hints)
-            .withDefaultRetry()
-            .execute();
-        return PaymentResponseDTO(resp, cardPayment.card.details);
-    }
+    var resp = await _payment(payment, hints: hints, testConfig: testConfig);
+    return CardPaymentResponseDTO(resp, cardPayment.card.details);
   }
 }

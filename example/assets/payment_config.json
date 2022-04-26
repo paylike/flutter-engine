@@ -1,0 +1,21 @@
+{
+  "provider": "apple_pay",
+  "data": {
+    "merchantIdentifier": "merchant.io.paylike",
+    "displayName": "Safe payment",
+    "merchantCapabilities": ["3DS", "debit", "credit"],
+    "supportedNetworks": ["visa", "masterCard"],
+    "countryCode": "HU",
+    "currencyCode": "HUF",
+    "requiredBillingContactFields": ["emailAddress", "name", "phoneNumber"],
+    "requiredShippingContactFields": [],
+    "shippingMethods": [
+      {
+        "amount": "0.00",
+        "detail": "Available within an hour",
+        "identifier": "in_store_pickup",
+        "label": "In-Store Pickup"
+      }
+    ]
+  }
+}

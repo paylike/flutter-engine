@@ -10,7 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  paylike_dart_client: ^1.0.7
+  pay: ^1.0.8
+  paylike_dart_client: ^1.0.9
   paylike_money: ^1.0.0
   webview_flutter: ^3.0.2
 
@@ -26,8 +27,8 @@ dev_dependencies:
 flutter:
 
   # To add assets to your package, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  ## assets:
+  ##  - lib/assets/paylike_payment_config.json
   #   - images/a_dot_ham.jpeg
   #
   # For details regarding assets in packages, see
