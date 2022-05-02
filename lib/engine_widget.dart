@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -167,12 +167,21 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
       if (constraints.maxHeight == double.infinity &&
           constraints.maxWidth == double.infinity) {
         return Center(
-            child: SizedBox(
-                child: webviewContent,
-                height: max(MediaQuery.of(context).size.width, 600),
-                width: MediaQuery.of(context).size.width - 100));
+            child: SingleChildScrollView(
+                child: SizedBox(
+                    child: webviewContent,
+                    height: max(MediaQuery.of(context).size.height, 600),
+                    width: MediaQuery.of(context).size.width - 100)));
       }
-      return webviewContent;
+      if (constraints.maxHeight == double.infinity) {
+        return SizedBox(height: 400, child: Expanded(child: webviewContent));
+      }
+      if (constraints.maxWidth == double.infinity) {
+        return SizedBox(
+            width: MediaQuery.of(context).size.width - 100,
+            child: Expanded(child: webviewContent));
+      }
+      return SizedBox(child: Expanded(child: webviewContent));
     });
   }
 }

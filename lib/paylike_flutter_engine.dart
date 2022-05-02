@@ -171,6 +171,8 @@ class PaylikeEngine extends ChangeNotifier {
         _htmlRepository.set(paymentExecution.resp.getHTMLBody());
       } else {
         _current = EngineState.done;
+        _transactionId =
+            paymentExecution.resp.getPaymentResponse().transaction.id;
       }
     } on PaylikeException catch (e) {
       var message = 'An API Exception happened: ${e.code} ${e.cause}';
@@ -204,6 +206,8 @@ class PaylikeEngine extends ChangeNotifier {
         _htmlRepository.set(paymentExecution.resp.getHTMLBody());
       } else {
         _current = EngineState.done;
+        _transactionId =
+            paymentExecution.resp.getPaymentResponse().transaction.id;
       }
     } on PaylikeException catch (e) {
       var message = 'An API Exception happened: ${e.code} ${e.cause}';

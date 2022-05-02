@@ -74,9 +74,18 @@ class APIService {
       'integration': {
         'key': clientId,
       },
-      'applepay': applePayPayment.token,
+      'applepay': {'token': applePayPayment.token},
       'custom': applePayPayment.custom,
     };
+    if (applePayPayment.amount != null) {
+      payment['amount'] = applePayPayment.amount!.toJSONBody();
+    }
+    if (applePayPayment.plans.isNotEmpty) {
+      payment['plan'] = applePayPayment.plans.map((cp) => cp.toJSON());
+    }
+    if (applePayPayment.unplanned != null) {
+      payment['unplanned'] = applePayPayment.unplanned!.toJSON();
+    }
     var resp = await _payment(payment, hints: hints, testConfig: testConfig);
     return ApplePayPaymentResponseDTO(resp, applePayPayment.token);
   }
@@ -132,6 +141,15 @@ class APIService {
       },
       'custom': cardPayment.custom,
     };
+    if (cardPayment.amount != null) {
+      payment['amount'] = cardPayment.amount!.toJSONBody();
+    }
+    if (cardPayment.plans.isNotEmpty) {
+      payment['plan'] = cardPayment.plans.map((cp) => cp.toJSON());
+    }
+    if (cardPayment.unplanned != null) {
+      payment['unplanned'] = cardPayment.unplanned!.toJSON();
+    }
     var resp = await _payment(payment, hints: hints, testConfig: testConfig);
     return CardPaymentResponseDTO(resp, cardPayment.card.details);
   }
