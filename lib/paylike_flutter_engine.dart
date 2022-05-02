@@ -167,8 +167,7 @@ class PaylikeEngine extends ChangeNotifier {
       _applePaymentRepository.set(payment);
       _hintsRepository.addHints(paymentExecution.resp.hints);
       if (paymentExecution.resp.isHTML) {
-        _current = EngineState.webviewChallengeRequired;
-        _htmlRepository.set(paymentExecution.resp.getHTMLBody());
+        throw Exception("Apple pay should not have a TDS challenge");
       } else {
         _current = EngineState.done;
         _transactionId =
