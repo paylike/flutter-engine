@@ -170,7 +170,7 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
             child: SingleChildScrollView(
                 child: SizedBox(
                     child: webviewContent,
-                    height: max(MediaQuery.of(context).size.height, 600),
+                    height: 400,
                     width: MediaQuery.of(context).size.width - 100)));
       }
       if (constraints.maxHeight == double.infinity) {
