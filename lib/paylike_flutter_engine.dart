@@ -265,7 +265,13 @@ class PaylikeEngine extends ChangeNotifier {
           throw Exception("Engine state invalid $_current");
         }
       } else {
-        throw Exception("Payment challenge should provide HTML at this point");
+        if (resp.paymentResponse != null &&
+            resp.getPaymentResponse().transaction.id.isNotEmpty) {
+          _current = EngineState.done;
+          _transactionId = resp.getPaymentResponse().transaction.id;
+        } else {
+          throw Exception("Unexpected payment challenge failure");
+        }
       }
     } on PaylikeException catch (e) {
       var message = 'An API Exception happened: ${e.code} ${e.cause}';
