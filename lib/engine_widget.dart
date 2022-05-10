@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
@@ -53,7 +52,7 @@ class PaylikeEngineWidget extends StatefulWidget {
 }
 
 class _EngineWidgetState extends State<PaylikeEngineWidget> {
-  final Completer<WebViewController> _webviewCtrl = Completer();
+  Completer<WebViewController> _webviewCtrl = Completer();
 
   /// Loads the HTML from the Engine
   void _loadEngineHTML() {
@@ -154,7 +153,7 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
           });
         },
         onWebViewCreated: (controller) {
-          _webviewCtrl.complete(controller);
+          _webviewCtrl = Completer()..complete(controller);
           controller
               .loadHtmlString(
                   HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
