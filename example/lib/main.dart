@@ -130,7 +130,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
             /// Notice that the widget is always rendered, but only visible
             /// when the webview flow is being done
-            PaylikeEngineWidget(engine: _engine, showEmptyState: true),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              PaylikeEngineWidget(engine: _engine, showEmptyState: true)
+            ]),
             ApplePayButton(
               paymentConfigurationAsset: 'payment_config.json',
               paymentItems: _paymentItems,

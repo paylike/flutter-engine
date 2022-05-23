@@ -152,15 +152,23 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
             widget.engine.setErrorState(e as Exception);
           });
         },
-        onWebViewCreated: (controller) {
-          _webviewCtrl = Completer()..complete(controller);
-          controller
-              .loadHtmlString(
-                  HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
-                  baseUrl: 'https:///b.paylike.io')
-              .catchError((e) {
+        onWebViewCreated: (controller) async {
+          try {
+            _webviewCtrl = Completer()..complete(controller);
+            await controller.runJavascript('''
+                          if (!window.paylike_listener) {
+                            window.paylike_listener = (e) => {
+                              MessageInvoker.postMessage(JSON.stringify(e.data)).then(() => console.log('posted')).catch((e) => console.log(e));
+                            };
+                            window.addEventListener("message", window.paylike_listener);
+                          }
+                        ''');
+            await controller.loadHtmlString(
+                HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
+                baseUrl: 'https:///b.paylike.io');
+          } on Exception catch (e) {
             widget.engine.setErrorState(e as Exception);
-          });
+          }
         },
       );
       if (constraints.maxHeight == double.infinity &&
