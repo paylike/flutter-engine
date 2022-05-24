@@ -1,4 +1,4 @@
-import 'dart:convert';
+// ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
 import 'package:paylike_flutter_engine/engine_widget.dart';
@@ -101,7 +101,6 @@ class _MyHomePageState extends State<MyHomePage> {
           amount: Money.fromDouble(
               PaylikeCurrencies().byCode(CurrencyCode.HUF), 150.0)));
     } on PaylikeException catch (e) {
-      print(jsonEncode(paymentResult));
       print(e.cause);
       print(e.code);
       print(e.statusCode);

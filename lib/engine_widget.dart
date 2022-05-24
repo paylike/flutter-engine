@@ -182,7 +182,7 @@ if (!window.b64Decoder) {
             width: MediaQuery.of(context).size.width - 150,
             child: Expanded(child: webviewContent));
       }
-      return SizedBox(child: Expanded(child: webviewContent));
+      return SizedBox.expand(child: webviewContent);
     });
   }
 }
