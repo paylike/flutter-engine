@@ -2,15 +2,22 @@
 
 This library includes the core elements required to implement a payment flow towards the Paylike API.
 
-If you are looking for our high level component providing payment forms as well, [check here (TODO: Final link)](https://paylike.io)
+If you are looking for our high level component providing complete payment forms as well, [check here](https://github.com/paylike/flutter-payment-forms)
 
 ## Table of contents
-* [API Reference](https://paylike.io#todo-link)
+* [API Reference](#api-reference)
 * [PaylikeEngineWidget](#paylikeenginewidget) (Webview component)
   * [Box constraints](#box-constraints)
   * [Understanding TDS](#understanding-tds)
 * [PaylikeEngine](#paylikeengine) (Underlying business logic service)
   * [Engine events](#engine-events)
+* [Example application](#example-application)
+
+## API Reference
+
+For the library you can find the API reference [here](https://paylike.io#todo-link).
+
+To get more familier with our server API you can find here the [official documentation](https:/github.com/paylike/api-reference).
 
 ## PaylikeEngineWidget
 
@@ -132,3 +139,29 @@ The library exposes an enum called EngineStates which describes the following st
 * `errorHappened` - Happens when the flow could not be completed successfully
 
 Learn more about this in the [API Reference](https://paylike.io#todo-link)
+
+## Example application
+
+In the [example directory](./example/lib/main.dart) you can find a simple example of how to use the library.
+
+On both **iOS** and **Android** you need to [register a merchant account](https://paylike.io/sign-up) with Paylike before you can use the example application. Once you have created your account you can create a new client ID for yourself and use it in the sandbox environment.
+
+**Android**
+
+Enter your client ID to the example's main.dart, and you are good to go with running the application.
+
+The minimum supported SDK is 19.
+
+**iOS**
+
+Apple Pay is only available for iOS devices. To be able to use this service you have to make a couple of modifications and [register a merchant identification with Apple](https://developer.apple.com/library/archive/ApplePay_Guide/Configuration.html).
+
+Once you have acquired the merchant identification from Apple, you can request a payment processing certificate to be added to your account via our [support](https://paylike.io/contact). This is vital to use our API with Apple Pay.
+
+When you received your Payment Processing Certificate, you need to add it to the [App Store Connect](https://appstoreconnect.apple.com/). Once you are done with this your merchant will be able to execute payments with Apple Pay.
+
+In your Xcode you also have to set your own merchant identification when you are building the applicaiton. You can find this option under the Signing & Capabilities (by opening `example/ios/Runner.xcworkspace` and adding Apple Pay capability)
+
+Now you should be ready to run the example and execute payments using Apple Pay.
+
+The minimum supported iOS version is 11.
