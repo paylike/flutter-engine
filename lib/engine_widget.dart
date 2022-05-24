@@ -3,34 +3,10 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
+import 'package:paylike_flutter_engine/src/service/html.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-/// Describes hints received via webview
-class HTMLHints {
-  /// Hints received during the webview TDS flow
-  List<String> hints;
-  HTMLHints.fromJSON(Map<String, dynamic> json)
-      : hints = (json['hints'] as List<dynamic>).cast();
-}
-
-/// Utility class to help the generation of a standard
-/// html structure that can be loaded to the webview
-class HTMLSupporter {
-  /// <body></body> part of the HTML
-  final String body;
-  HTMLSupporter(this.body);
-
-  /// Generates the correct body of the HTML
-  String generateHTML() {
-    return '''
-<!DOCTYPE html><html>
-<head>
-</head>
-$body
-</html>
-''';
-  }
-}
+import 'src/dto/html.dart';
 
 /// Used for webview rendering during the TDS challenge flow
 class PaylikeEngineWidget extends StatefulWidget {
@@ -55,15 +31,48 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
   Completer<WebViewController> _webviewCtrl = Completer();
 
   /// Loads the HTML from the Engine
-  void _loadEngineHTML() {
-    _webviewCtrl.future.then((ctrl) => ctrl
-            .loadHtmlString(
-                HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
-                baseUrl: 'https:///b.paylike.io')
-            .catchError((e) {
-          debugPrint('Webview error $e');
-        }));
-  }
+  Future<void> _loadEngineHTML() =>
+      _webviewCtrl.future.then((ctrl) => ctrl.runJavascript('''
+  var iframe = document.getElementById('iamframe');
+  iframe = iframe.contentWindow || ( iframe.contentDocument.document || iframe.contentDocument);
+  iframe.document.open();
+  window.iframeContent = `${base64.encode(utf8.encode(HTMLService(widget.engine.getTDSHtml()).generateHTML()))}`;
+  iframe.document.write(window.b64Decoder(window.iframeContent));
+  iframe.document.close();
+''')).catchError((e) {
+        print(e);
+        widget.engine.setErrorState(Exception('Could not load TDS HTML'));
+      });
+
+  /// Loads the necessary scripts to the webview
+  Future<void> _populateWindowObject() =>
+      _webviewCtrl.future.then((ctrl) => ctrl.runJavascript('''
+if (!window.paylike_listener) {
+  window.paylike_listener = (e) => {
+    if (!MessageInvoker || !MessageInvoker.postMessage) {
+      setTimeout(() => {
+        window.paylike_listener(e);
+      }, 100);
+      return;
+    }
+    MessageInvoker.postMessage(JSON.stringify(e.data));
+  };
+  window.addEventListener("message", window.paylike_listener);
+}
+if (!window.b64Decoder) {
+  window.b64Decoder = (str) =>
+    decodeURIComponent(
+      atob(str)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+}
+''')).catchError((e) {
+        print(e);
+        widget.engine
+            .setErrorState(Exception('Could not populate window object'));
+      });
 
   /// Event listener for engine state changes
   void _reactForEvents() {
@@ -119,8 +128,12 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
           JavascriptChannel(
               name: 'MessageInvoker',
               onMessageReceived: (s) {
+                if (s.message == '"ready"') {
+                  _loadEngineHTML();
+                  return;
+                }
                 var htmlParsedResponse =
-                    HTMLHints.fromJSON(jsonDecode(s.message));
+                    HTMLHintsDTO.fromJSON(jsonDecode(s.message));
                 if (htmlParsedResponse.hints.isEmpty) {
                   widget.engine.setErrorState(
                       Exception('Hints cannot be empty after webview auth'));
@@ -137,37 +150,17 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
               })
         },
         onProgress: (progress) {
-          () async {
-            var controller = await _webviewCtrl.future;
-            await controller.runJavascript('''
-                          if (!window.paylike_listener) {
-                            window.paylike_listener = (e) => {
-                              MessageInvoker.postMessage(JSON.stringify(e.data)).then(() => console.log('posted')).catch((e) => console.log(e));
-                            };
-                            window.addEventListener("message", window.paylike_listener);
-                          }
-                        ''');
-          }()
-              .catchError((e) {
-            widget.engine.setErrorState(e as Exception);
-          });
+          _populateWindowObject();
         },
         onWebViewCreated: (controller) async {
           try {
             _webviewCtrl = Completer()..complete(controller);
-            await controller.runJavascript('''
-                          if (!window.paylike_listener) {
-                            window.paylike_listener = (e) => {
-                              MessageInvoker.postMessage(JSON.stringify(e.data)).then(() => console.log('posted')).catch((e) => console.log(e));
-                            };
-                            window.addEventListener("message", window.paylike_listener);
-                          }
-                        ''');
+            await _populateWindowObject();
             await controller.loadHtmlString(
-                HTMLSupporter(widget.engine.getTDSHtml()).generateHTML(),
+                HTMLService(widget.engine.getTDSHtml()).generateWhatcher(),
                 baseUrl: 'https:///b.paylike.io');
           } on Exception catch (e) {
-            widget.engine.setErrorState(e as Exception);
+            widget.engine.setErrorState(e);
           }
         },
       );
