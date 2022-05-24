@@ -40,11 +40,11 @@ class _EngineWidgetState extends State<PaylikeEngineWidget> {
   iframe.document.write(window.b64Decoder(window.iframeContent));
   iframe.document.close();
 ''')).catchError((e) {
-        print(e);
+        widget.engine.log?.call(e);
         widget.engine.setErrorState(Exception('Could not load TDS HTML'));
       });
 
-  /// Loads the necessary scripts to the webview
+  /// Loads the necessary scripts to the webview window
   Future<void> _populateWindowObject() =>
       _webviewCtrl.future.then((ctrl) => ctrl.runJavascript('''
 if (!window.paylike_listener) {
@@ -69,14 +69,15 @@ if (!window.b64Decoder) {
     );
 }
 ''')).catchError((e) {
-        print(e);
+        widget.engine.log?.call(e);
         widget.engine
             .setErrorState(Exception('Could not populate window object'));
       });
 
   /// Event listener for engine state changes
   void _reactForEvents() {
-    debugPrint("State changed to ${widget.engine.current}");
+    widget.engine.log
+        ?.call("[DEBUG] State changed to ${widget.engine.current}");
     if (widget.engine.current == EngineState.webviewChallengeStarted) {
       _loadEngineHTML();
     } else {

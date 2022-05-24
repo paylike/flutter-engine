@@ -42,12 +42,6 @@ enum EngineState {
   errorHappened,
 }
 
-/// Describes the state of the current payment
-enum PaymentState {
-  /// State when engine is initialized
-  initial,
-}
-
 /// Describes an error state of the engine
 class PaylikeEngineError {
   /// Intended message for developers
