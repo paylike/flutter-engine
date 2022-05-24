@@ -171,14 +171,14 @@ if (!window.b64Decoder) {
                 child: SizedBox(
                     child: webviewContent,
                     height: 400,
-                    width: MediaQuery.of(context).size.width - 100)));
+                    width: MediaQuery.of(context).size.width - 150)));
       }
       if (constraints.maxHeight == double.infinity) {
         return SizedBox(height: 400, child: Expanded(child: webviewContent));
       }
       if (constraints.maxWidth == double.infinity) {
         return SizedBox(
-            width: MediaQuery.of(context).size.width - 100,
+            width: MediaQuery.of(context).size.width - 150,
             child: Expanded(child: webviewContent));
       }
       return SizedBox(child: Expanded(child: webviewContent));
