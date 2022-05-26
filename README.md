@@ -72,8 +72,7 @@ TDS is required to execute the payment flow and it is a core part of accepting p
 
 Apple Pay is an exception from this as their system is already integrated with the TDS challenge.
 
-<img src="doc/payment_flow_summary.jpeg"/>
-
+<img src="https://i.imgur.com/51Ix8AP.jpg" style="max-width: 100%;"/>
 
 ## PaylikeEngine
 

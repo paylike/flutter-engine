@@ -17,7 +17,7 @@ class PaylikeEngineWidget extends StatefulWidget {
   /// in which it makes no sense to render any webviews ([EngineState.errorHappened] or [EngineState.waitingForInput])
   /// then the widget should show nothing or a text
   ///
-  /// NOTE: Use [true] for production and [false] for development
+  /// NOTE: Use `true` for production and `false` for development
   final bool showEmptyState;
   const PaylikeEngineWidget(
       {Key? key, required this.engine, this.showEmptyState = false})
