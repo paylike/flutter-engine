@@ -99,6 +99,7 @@ void main() async {
   /// -----------------
   /// After the createPayment function is called the engine will update its state
   /// to render TDS webview challenge
+  /// NOTE: Tokenized cards can be saved and reused later with the API
   {
     var tokenizedCard = await engine.tokenize('4100000000000000', '000');
     await _engine.createPayment(CardPayment(

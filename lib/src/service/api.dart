@@ -1,3 +1,4 @@
+import 'package:paylike_dart_client/dto.dart';
 import 'package:paylike_dart_client/paylike_dart_client.dart';
 import 'package:paylike_flutter_engine/src/domain/payment.dart';
 import 'package:paylike_flutter_engine/src/dto/payment.dart';

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:paylike_flutter_engine/domain.dart';
 
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
 import 'package:paylike_flutter_engine/src/config/api.dart';

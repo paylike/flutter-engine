@@ -1,4 +1,4 @@
-import 'package:paylike_dart_client/paylike_dart_client.dart';
+import 'package:paylike_dart_client/dto.dart';
 
 import '../domain/card.dart';
 

@@ -1,7 +1,9 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
-import 'package:paylike_flutter_engine/engine_widget.dart';
+import 'package:pay/pay.dart';
+import 'package:paylike_flutter_engine/domain.dart';
+import 'package:paylike_flutter_engine/exception.dart';
 import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
 
 void main() {

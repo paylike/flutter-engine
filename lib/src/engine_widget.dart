@@ -6,7 +6,7 @@ import 'package:paylike_flutter_engine/paylike_flutter_engine.dart';
 import 'package:paylike_flutter_engine/src/service/html.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import 'src/dto/html.dart';
+import 'dto/html.dart';
 
 /// Used for webview rendering during the TDS challenge flow
 class PaylikeEngineWidget extends StatefulWidget {
