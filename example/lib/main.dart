@@ -10,7 +10,9 @@ void main() {
   runApp(const MyApp());
 }
 
-const clientID = 'e393f9ec-b2f7-4f81-b455-ce45b02d355d';
+/// Register your own account [here](https://paylike.io)
+var clientID = 'your-client-id';
+
 const _paymentItems = [
   PaymentItem(
     label: 'Total',
@@ -81,7 +83,8 @@ class _MyHomePageState extends State<MyHomePage> {
     _engine.removeListener(_engineListener);
   }
 
-  /// This is the function important for the Engine usage example
+  /// Important for the Engine usage example executing a single
+  /// card transaction
   void _doPaymentFlow() async {
     _engine.restart();
     var card = await _engine.tokenize("410000000000000", "123");
@@ -93,6 +96,11 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
   }
 
+  /// Important for the Engine usage example executing a single
+  /// Apple Pay transaction
+  ///
+  /// NOTE: You need to have Apple Merchant set up. Check our documentation for
+  /// further information!
   void onApplePayResult(Map<String, dynamic> paymentResult) async {
     _engine.restart();
     try {
@@ -116,7 +124,8 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
+        child: SingleChildScrollView(
+            child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
@@ -134,6 +143,11 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               PaylikeEngineWidget(engine: _engine, showEmptyState: true)
             ]),
+            const SizedBox(height: 50),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ElevatedButton(
+                  onPressed: _doPaymentFlow, child: const Text('Pay')),
+            ]),
             ApplePayButton(
               paymentConfigurationAsset: 'payment_config.json',
               paymentItems: _paymentItems,
@@ -146,12 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _doPaymentFlow,
-        tooltip: 'PaymentFlow',
-        child: const Icon(Icons.add_shopping_cart_sharp),
+        )),
       ),
     );
   }

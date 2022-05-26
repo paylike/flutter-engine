@@ -1,5 +1,7 @@
 # Paylike's Flutter engine
 
+[![pub points](https://badges.bar/paylike_dart_client/pub%20points)](https://pub.dev/packages/paylike_dart_client)
+
 This library includes the core elements required to implement a payment flow towards the Paylike API.
 
 If you are looking for our high level component providing complete payment forms as well, [check here](https://github.com/paylike/flutter-payment-forms)
