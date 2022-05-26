@@ -1,6 +1,6 @@
 # Paylike's Flutter engine
 
-[![pub points](https://badges.bar/paylike_engine/pub%20points)](https://pub.dev/packages/paylike_engine)
+[![pub points](https://badges.bar/paylike_flutter_engine/pub%20points)](https://pub.dev/packages/paylike_flutter_engine)
 
 This library includes the core elements required to implement a payment flow towards the Paylike API.
 
