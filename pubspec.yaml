@@ -1,6 +1,6 @@
 name: paylike_flutter_engine
 description: Provides the core functionality required for executing payment flows in the Paylike Ecosystem (including webview widget to solve TDS). 
-version: 0.1.0
+version: 0.1.1
 homepage: https://paylike.io
 
 environment:
@@ -13,7 +13,7 @@ dependencies:
   pay: ^1.0.8
   paylike_currencies: ^1.0.7
   paylike_dart_client: ^1.0.10
-  paylike_money: ^1.0.1
+  paylike_money: ^1.0.2
   webview_flutter: ^3.0.2
 
 dev_dependencies:
