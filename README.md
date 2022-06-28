@@ -106,8 +106,7 @@ void main() async {
     await _engine.createPayment(CardPayment(
         card: PaylikeCard(
             details: card, expiry: const Expiry(year: 2025, month: 3)),
-        amount:
-            Money.fromDouble(PaylikeCurrencies().byCode(CurrencyCode.EUR), 20.5),
+        amount: Money.fromDouble('EUR', 20.5),
       ));
   }
 
@@ -122,8 +121,7 @@ void main() async {
     var tokenizedApplePay = await engine.tokenizeApplePay(applePayToken);
     await _engine.createPaymentWithApple(ApplePayPayment(
         token: tokenized,
-        amount: Money.fromDouble(
-            PaylikeCurrencies().byCode(CurrencyCode.HUF), 150.0)));
+        amount: Money.fromDouble('HUF', 150.0)));
   }
 }
 ```

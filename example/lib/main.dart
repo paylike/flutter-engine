@@ -91,8 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
     await _engine.createPayment(CardPayment(
       card: PaylikeCard(
           details: card, expiry: const Expiry(year: 2025, month: 3)),
-      amount:
-          Money.fromDouble(PaylikeCurrencies().byCode(CurrencyCode.EUR), 20.5),
+      amount: Money.fromDouble('EUR', 20.5),
     ));
   }
 
@@ -107,9 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
       var token = paymentResult['token'];
       var tokenized = await _engine.tokenizeAppleToken(token);
       await _engine.createPaymentWithApple(ApplePayPayment(
-          token: tokenized,
-          amount: Money.fromDouble(
-              PaylikeCurrencies().byCode(CurrencyCode.HUF), 150.0)));
+          token: tokenized, amount: Money.fromDouble('HUF', 150.0)));
     } on PaylikeException catch (e) {
       print(e.cause);
       print(e.code);

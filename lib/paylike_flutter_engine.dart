@@ -4,5 +4,4 @@ library paylike_flutter_engine;
 export 'src/config/api.dart';
 export 'src/engine.dart';
 export 'src/engine_widget.dart';
-export 'package:paylike_currencies/paylike_currencies.dart';
 export 'package:paylike_money/paylike_money.dart';

@@ -8,8 +8,7 @@ import 'package:paylike_flutter_engine/src/domain/plan.dart';
 import 'package:paylike_money/paylike_money.dart';
 
 void main() {
-  var testAmount =
-      Money.fromDouble(PaylikeCurrencies().byCode(CurrencyCode.EUR), 30.0);
+  var testAmount = Money.fromDouble('EUR', 30.0);
 
   var testCard = PaylikeCard(
       details: const CardTokenized(number: 'foo', cvc: 'bar'),

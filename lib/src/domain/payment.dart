@@ -60,7 +60,7 @@ class BasePayment implements PaylikePaymentBody {
       json = {
         ...json,
         'amount': {
-          'currency': amount?.currency.code,
+          'currency': amount?.currency,
           'value': amount?.value,
           'exponent': amount?.exponent,
         }
